@@ -57,4 +57,4 @@
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,c++
 
 # Ignore all binaries
-*/bin/*
+**/bin/
