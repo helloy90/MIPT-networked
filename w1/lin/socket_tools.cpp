@@ -1,15 +1,14 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
+#include <cstring>
+
 #include <netdb.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
 #include <stdio.h>
+#include <unistd.h>
+
 
 #include "socket_tools.h"
 
-// Adaptation of linux man page: https://linux.die.net/man/3/getaddrinfo
+// https://linux.die.net/man/3/getaddrinfo
 static int get_dgram_socket(addrinfo *addr, bool should_bind, addrinfo *res_addr)
 {
   for (addrinfo *ptr = addr; ptr != nullptr; ptr = ptr->ai_next)
@@ -56,7 +55,16 @@ int create_dgram_socket(const char *address, const char *port, addrinfo *res_add
 
   int sfd = get_dgram_socket(result, isListener, res_addr);
 
-  //freeaddrinfo(result);
+  // freeaddrinfo(result);
   return sfd;
 }
 
+int create_server(const char *port)
+{
+  return create_dgram_socket(nullptr, port, nullptr);
+}
+
+int create_client(const char *address, const char *port, addrinfo *res_addr)
+{
+  return create_dgram_socket(address, port, res_addr);
+}
