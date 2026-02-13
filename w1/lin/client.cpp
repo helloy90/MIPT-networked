@@ -8,8 +8,10 @@
 
 #include "socket_tools.h"
 
-std::atomic<bool> running{true};
 
+const char* PORT = "2026";
+
+std::atomic<bool> running{true};
 
 std::string buffered_msg;
 // clang-format off
@@ -24,7 +26,6 @@ std::vector<std::string> messages = {
     "..."};
 // clang-format on
 
-const char* port = "2026";
 addrinfo addr_info;
 int sfd;
 
@@ -86,7 +87,7 @@ void handle_input()
 
 int main(int argc, const char** argv)
 {
-	sfd = create_client("localhost", port, &addr_info);
+	sfd = create_client("localhost", PORT, &addr_info);
 	if (sfd == -1)
 	{
 		std::cout << "Failed to create a socket\n";

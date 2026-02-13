@@ -4,12 +4,13 @@
 
 #include "socket_tools.h"
 
-const char* port = "2026";
+
+const char* PORT = "2026";
 
 int main(int argc, const char** argv)
 {
 
-	int sfd = create_server(port);
+	int sfd = create_server(PORT);
 	if (sfd == -1)
 	{
 		std::cout << "Failed to create a socket\n";
@@ -18,10 +19,10 @@ int main(int argc, const char** argv)
 
 	std::cout << "ChatServer - Listening!\n";
 
+	fd_set read_set;
+	FD_ZERO(&read_set);
 	while (true)
 	{
-		fd_set read_set;
-		FD_ZERO(&read_set);
 		FD_SET(sfd, &read_set);
 		timeval timeout = {0, 100000}; // 100 ms
 		select(sfd + 1, &read_set, NULL, NULL, &timeout);
