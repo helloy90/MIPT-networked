@@ -1,8 +1,5 @@
-#include <cstring>
-#include <iostream>
-#include <ws2tcpip.h>
-
 #include "Server.h"
+
 
 int main(int argc, const char** argv)
 {

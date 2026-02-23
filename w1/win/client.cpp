@@ -7,8 +7,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+#include "ConnectionCheckMsg.h"
 #include "socket_tools.h"
-
 
 const char* PORT = "2026";
 
@@ -38,6 +38,14 @@ void receive_messages()
 			sockaddr_in socketInfo;
 			int socketLen = sizeof(sockaddr_in);
 			int num_bytes = recvfrom((SOCKET)sfd, buffer, bufferSize - 1, 0, (sockaddr*)&socketInfo, &socketLen);
+
+			if (std::string(buffer) == ConnectionCheck::checkMsg)
+			{
+				sendto((SOCKET)sfd, ConnectionCheck::checkAnswerMsg.c_str(),
+					static_cast<int>(ConnectionCheck::checkAnswerMsg.size()), 0, addr_info.ai_addr,
+					addr_info.ai_addrlen);
+				continue;
+			}
 
 			std::cout << "From server: " << buffer << "\n";
 			std::cout << "> " << buffered_msg << std::flush;
@@ -105,6 +113,10 @@ int main(int argc, const char** argv)
 		std::cout << "Failed to create a socket\n";
 		return 1;
 	}
+
+	const std::string autoconnect = "/___autoconnect";
+	sendto((SOCKET)sfd, autoconnect.c_str(), static_cast<int>(autoconnect.size()), 0, addr_info.ai_addr,
+		addr_info.ai_addrlen);
 
 	std::cout << "ChatClient - Type '/quit' to exit\n"
 			  << "> ";
