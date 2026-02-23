@@ -8,7 +8,7 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <ws2tcpip.h>
 
-#include "ConnectionCheckMsg.h"
+#include "DuelsExtention.h"
 #include "socket_tools.h"
 
 
@@ -35,6 +35,8 @@ public:
 		Connect,
 		Broadcast,
 		DirectMessage,
+		DuelStart,
+		DuelAnswer,
 		ConnectionCheck,
 		Disconnect,
 	};
@@ -55,9 +57,12 @@ private:
 	void sendConnectionChecks();
 	void checkConnections();
 
-	void broadcast(const std::string& message, uint32_t client_self_port);
-	void directMessage(const std::string& message, const std::string& receiver_port, uint32_t client_self_port);
+	void broadcast(const std::string& message, uint32_t exclude_port); // exclude_port == 0 -> send to everyone
+	void directMessage(const std::string& message, const std::string& receiver_port, uint32_t exclude_port);
 	void sendMessage(const std::string& message, const sockaddr_in& address_info);
+
+	void processDuelStart(uint32_t client_port);
+	void processDuelAnswer(uint32_t client_port, const std::string& client_answer);
 
 private:
 	int fd;
@@ -66,15 +71,5 @@ private:
 	std::unordered_map<uint32_t, ClientInfo> clientInfos;
 	bool valid;
 
-	static inline const std::unordered_map<std::string, RequestType> requestPrefixes = {
-		{"/___autoconnect", RequestType::Connect},
-		{"/all ", RequestType::Broadcast},
-		{"/w ", RequestType::DirectMessage},
-		{ConnectionCheck::checkAnswerMsg, RequestType::ConnectionCheck},
-		{"/quit", RequestType::Disconnect},
-	};
-
-	static inline const TimeDuration timeBeforeDisconnect = TimeDuration(5);
-	static inline const TimeDuration timeBetweenChecks = TimeDuration(1);
-	static inline TimePoint lastGlobalCheck;
+	DuelsExtention duelsExtention;
 };
