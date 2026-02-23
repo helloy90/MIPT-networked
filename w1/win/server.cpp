@@ -77,7 +77,7 @@ void Server::run()
 
 			if (num_bytes > 0)
 			{
-				uint16_t clientPort = ntohs(socketInfo.sin_port);
+				uint32_t clientPort = ntohs(socketInfo.sin_port);
 
 				auto now = Clock::now();
 				ClientInfo client = {

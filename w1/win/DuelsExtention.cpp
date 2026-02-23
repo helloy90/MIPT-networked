@@ -14,7 +14,7 @@ std::tuple<std::string, uint32_t, uint32_t> DuelsExtention::initiateDuel(uint32_
 {
 	if (awaitingDuel.hasPlayer(client_port))
 	{
-		std::cout << Log::msg(Log::Type::Info) << "Player with port " << client_port << "is already awaiting duel."
+		std::cout << Log::msg(Log::Type::Info) << "Player with port " << client_port << " is already awaiting duel."
 				  << std::endl;
 		return {"", 0, 0};
 	}
