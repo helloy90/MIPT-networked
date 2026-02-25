@@ -4,43 +4,52 @@
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+#include "ConnectionCheckMsg.h"
 #include "socket_tools.h"
-
 
 const char* PORT = "2026";
 
 std::atomic<bool> running{true};
 
 std::string buffered_msg;
-// clang-format off
-std::vector<std::string> messages = {
-    "https://youtu.be/dQw4w9WgXcQ?si=Ox1lQULEyKpisqd",
-    "Never gonna give you up",
-    "Never gonna let you down",
-    "Never gonna run around and desert you",
-    "Never gonna make you cry",
-    "Never gonna say goodbye",
-    "Never gonna tell a lie and hurt you",
-    "..."};
-// clang-format on
 
 addrinfo addr_info;
 int sfd;
 
 void receive_messages()
 {
-	int message_num = -1;
+	fd_set readSet;
+	FD_ZERO(&readSet);
+	timeval timeout = {0, 100000}; // 100 ms
 	while (running)
 	{
-		message_num = (message_num + 1) % messages.size();
-		std::cout << "\rRick: " << messages[message_num] << "\n";
-		std::cout << "> " << buffered_msg << std::flush;
+		constexpr size_t bufferSize = 1000;
+		static char buffer[bufferSize];
 
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		FD_SET(sfd, &readSet);
+		select((int)sfd + 1, &readSet, NULL, NULL, &timeout);
+
+		if (FD_ISSET((SOCKET)sfd, &readSet))
+		{
+			memset(buffer, 0, bufferSize);
+			sockaddr_in socketInfo;
+			int socketLen = sizeof(sockaddr_in);
+			int num_bytes = recvfrom((SOCKET)sfd, buffer, bufferSize - 1, 0, (sockaddr*)&socketInfo, &socketLen);
+
+			if (std::string(buffer) == ConnectionCheck::checkMsg)
+			{
+				sendto((SOCKET)sfd, ConnectionCheck::checkAnswerMsg.c_str(),
+					static_cast<int>(ConnectionCheck::checkAnswerMsg.size()), 0, addr_info.ai_addr,
+					addr_info.ai_addrlen);
+				continue;
+			}
+
+			std::cout << "From server: " << buffer << "\n";
+			std::cout << "> " << buffered_msg << std::flush;
+		}
 	}
 }
 
@@ -68,6 +77,7 @@ void handle_input()
 	{
 		if (buffered_msg == "/quit")
 		{
+			sendto((SOCKET)sfd, buffered_msg.c_str(), buffered_msg.size(), 0, addr_info.ai_addr, addr_info.ai_addrlen);
 			running = false;
 			std::cout << "\nExiting...\n";
 		}
@@ -103,6 +113,10 @@ int main(int argc, const char** argv)
 		std::cout << "Failed to create a socket\n";
 		return 1;
 	}
+
+	const std::string autoconnect = "/___autoconnect";
+	sendto((SOCKET)sfd, autoconnect.c_str(), static_cast<int>(autoconnect.size()), 0, addr_info.ai_addr,
+		addr_info.ai_addrlen);
 
 	std::cout << "ChatClient - Type '/quit' to exit\n"
 			  << "> ";
